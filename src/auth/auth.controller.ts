@@ -2,13 +2,16 @@ import { Body, Controller, Get, HttpException, HttpStatus, Post, Req } from '@ne
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
-import { ApiBody, ApiResponse } from '@nestjs/swagger';
+import { ApiBody, ApiCreatedResponse, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { UsersModel } from 'src/users/entities/user.entity';
+import { UsersService } from 'src/users/users.service';
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly jwtService: JwtService,
+    private readonly usersService: UsersService,
   ) { }
 
 
@@ -49,5 +52,30 @@ export class AuthController {
 
     return { accessToken };
   }
+
+  @ApiOperation({ summary: 'Sign Up' })
+  @ApiBody({
+    description: '회원 가입 정보',
+    schema: {
+      type: 'object',
+      properties: {
+        email: { type: 'string', example: 'user@example.com' },
+        password: { type: 'string', example: 'password123' },
+      },
+    },
+  })
+  @ApiCreatedResponse({ description: 'The user has been successfully created.', type: UsersModel })
+  @Post('signup')
+  async crateUser(@Body() user: Partial<UsersModel>) {
+    try {
+      const createdUser = await this.usersService.create(user);
+      return { success: true, user: createdUser };
+
+    } catch (error) {
+      console.log("error : ", error);
+      throw new HttpException(error.message, HttpStatus.CONFLICT);
+    }
+  }
+
 
 }
