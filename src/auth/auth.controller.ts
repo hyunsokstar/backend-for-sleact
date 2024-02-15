@@ -1,10 +1,13 @@
-import { Body, Controller, Get, HttpException, HttpStatus, Post, Req } from '@nestjs/common';
+import { Body, Controller, Get, HttpException, HttpStatus, Post, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
 import { ApiBody, ApiCreatedResponse, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { UsersModel } from 'src/users/entities/user.entity';
 import { UsersService } from 'src/users/users.service';
+import { AuthGuard } from '@nestjs/passport';
+import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
+import { LocalAuthGuard } from 'src/guards/local-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -32,25 +35,31 @@ export class AuthController {
       }
     }
   }) // 요청 본문에 대한 설명 및 예제 추가
+  // @Post('login')
+  // async logIn(@Body() loginDto: LoginDto) {
+  //   const { email, password } = loginDto;
+
+  //   // 유효성 검사
+  //   if (!email || !password) {
+  //     throw new HttpException('이메일과 비밀번호를 모두 입력해주세요.', HttpStatus.BAD_REQUEST);
+  //   }
+
+  //   // 사용자 인증 및 JWT 발급
+  //   const user = await this.authService.validateUser(email, password);
+  //   if (!user) {
+  //     throw new HttpException('유효한 사용자가 아닙니다.', HttpStatus.UNAUTHORIZED);
+  //   }
+
+  //   const payload = { email: user.email, sub: user.userId };
+  //   const accessToken = this.jwtService.sign(payload);
+
+  //   return { accessToken };
+  // }
+
   @Post('login')
-  async logIn(@Body() loginDto: LoginDto) {
-    const { email, password } = loginDto;
-
-    // 유효성 검사
-    if (!email || !password) {
-      throw new HttpException('이메일과 비밀번호를 모두 입력해주세요.', HttpStatus.BAD_REQUEST);
-    }
-
-    // 사용자 인증 및 JWT 발급
-    const user = await this.authService.validateUser(email, password);
-    if (!user) {
-      throw new HttpException('유효한 사용자가 아닙니다.', HttpStatus.UNAUTHORIZED);
-    }
-
-    const payload = { email: user.email, sub: user.userId };
-    const accessToken = this.jwtService.sign(payload);
-
-    return { accessToken };
+  @UseGuards(LocalAuthGuard)
+  async logIn(@Req() req) { // Use Request object to access user object added by Passport
+    return this.authService.login(req.user);
   }
 
   @ApiOperation({ summary: 'Sign Up' })

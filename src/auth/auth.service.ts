@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UsersModel } from 'src/users/entities/user.entity';
 import { Repository } from 'typeorm';
@@ -8,6 +9,7 @@ export class AuthService {
     constructor(
         @InjectRepository(UsersModel)
         private usersRepository: Repository<UsersModel>,
+        private jwtService: JwtService, // JwtService 주입
     ) { }
 
     async validateUser(email: string, password: string): Promise<any> {
@@ -28,6 +30,15 @@ export class AuthService {
         // 비밀번호를 비교하여 일치하는지 확인합니다.
         // 여기에서는 비밀번호를 해시하지 않았다고 가정합니다.
         return password === hashedPassword;
+    }
+
+    async login(user: UsersModel) {
+        console.log("user : ", user);
+
+        const payload = { email: user.email, sub: user.id };
+        return {
+            access_token: this.jwtService.sign(payload),
+        };
     }
 
 }

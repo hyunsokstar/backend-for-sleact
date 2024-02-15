@@ -7,13 +7,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModel } from './entities/user.entity';
 
 @Module({
-  // imports: [
-  //   PassportModule,
-  //   JwtModule.register({
-  //     secret: "terecal",
-  //     signOptions: { expiresIn: '60s' },
-  //   }),
-  // ],
+
   imports: [
     TypeOrmModule.forFeature([UsersModel])
   ],
